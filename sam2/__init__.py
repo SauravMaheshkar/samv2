@@ -8,4 +8,4 @@ from hydra import initialize_config_module
 
 from .build_sam import load_model
 
-initialize_config_module("configs", version_base="1.2")
+initialize_config_module("sam2.configs", version_base="1.2")
