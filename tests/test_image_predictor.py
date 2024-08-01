@@ -14,7 +14,6 @@ def test_image_predictor_with_single_point(download_weights) -> None:
     model = build_sam2(
         variant_to_config_mapping["tiny"],
         "./artifacts/sam2_hiera_tiny.pt",
-        device="cpu",
     )
     image_predictor = SAM2ImagePredictor(model)
     image_predictor.set_image(image)

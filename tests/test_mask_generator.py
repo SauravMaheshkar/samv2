@@ -15,7 +15,6 @@ def test_mask_generator(download_weights) -> None:
     model = build_sam2(
         variant_to_config_mapping["tiny"],
         "./artifacts/sam2_hiera_tiny.pt",
-        device="cpu",
     )
     mask_generator = SAM2AutomaticMaskGenerator(model)
     masks = mask_generator.generate(image)

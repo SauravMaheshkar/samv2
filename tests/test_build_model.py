@@ -15,7 +15,6 @@ def test_build_sam(download_weights, variant: str):
     model = build_sam2(
         variant_to_config_mapping[variant],
         f"./artifacts/sam2_hiera_{variant}.pt",
-        device="cpu",
     )
 
     assert isinstance(model, torch.nn.Module)

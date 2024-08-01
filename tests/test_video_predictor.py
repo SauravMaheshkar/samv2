@@ -11,7 +11,6 @@ def test_video_predictor(download_weights) -> None:
     video_predictor = build_sam2_video_predictor(
         variant_to_config_mapping["tiny"],
         "./artifacts/sam2_hiera_tiny.pt",
-        device="cpu",
     )
     inference_state = video_predictor.init_state(
         video_path="tests/assets/images/",

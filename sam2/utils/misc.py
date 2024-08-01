@@ -116,12 +116,12 @@ class AsyncVideoFrameLoader:
     A list of video frames to be load asynchronously without blocking session start.
     """
 
-    def __init__(self, img_paths, image_size, offload_video_to_cpu, img_mean, img_std):
+    def __init__(self, img_paths, image_size, img_mean, img_std, device):
         self.img_paths = img_paths
         self.image_size = image_size
-        self.offload_video_to_cpu = offload_video_to_cpu
         self.img_mean = img_mean
         self.img_std = img_std
+        self.device = device
         # items in `self._images` will be loaded asynchronously
         self.images = [None] * len(img_paths)
         # catch and raise any exceptions in the async loading thread
@@ -161,8 +161,7 @@ class AsyncVideoFrameLoader:
         # normalize by mean and std
         img -= self.img_mean
         img /= self.img_std
-        if not self.offload_video_to_cpu:
-            img = img.cuda(non_blocking=True)
+        img = img.to(self.device)
         self.images[index] = img
         return img
 
@@ -173,16 +172,13 @@ class AsyncVideoFrameLoader:
 def load_video_frames(
     video_path,
     image_size,
-    offload_video_to_cpu,
     img_mean=(0.485, 0.456, 0.406),
     img_std=(0.229, 0.224, 0.225),
     async_loading_frames=False,
+    device="cpu",
 ):
     """
     Load the video frames from a directory of JPEG files ("<frame_index>.jpg" format).
-
-    The frames are resized to image_size x image_size and are loaded to GPU if
-    `offload_video_to_cpu` is `False` and to CPU if `offload_video_to_cpu` is `True`.
 
     You can load a frame asynchronously by setting `async_loading_frames` to `True`.
     """
@@ -206,17 +202,16 @@ def load_video_frames(
 
     if async_loading_frames:
         lazy_images = AsyncVideoFrameLoader(
-            img_paths, image_size, offload_video_to_cpu, img_mean, img_std
+            img_paths, image_size, img_mean, img_std, device
         )
         return lazy_images, lazy_images.video_height, lazy_images.video_width
 
     images = torch.zeros(num_frames, 3, image_size, image_size, dtype=torch.float32)
     for n, img_path in enumerate(tqdm(img_paths, desc="frame loading (JPEG)")):
         images[n], video_height, video_width = _load_img_as_tensor(img_path, image_size)
-    if not offload_video_to_cpu:
-        images = images.cuda()
-        img_mean = img_mean.cuda()
-        img_std = img_std.cuda()
+    images = images.to(device)
+    img_mean = img_mean.to(device)
+    img_std = img_std.to(device)
     # normalize by mean and std
     images -= img_mean
     images /= img_std

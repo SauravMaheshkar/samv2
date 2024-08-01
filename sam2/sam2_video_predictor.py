@@ -38,36 +38,24 @@ class SAM2VideoPredictor(SAM2Base):
     def init_state(
         self,
         video_path,
-        offload_video_to_cpu=True,
-        offload_state_to_cpu=True,
+        device="cpu",
         async_loading_frames=False,
     ):
         """Initialize a inference state."""
         images, video_height, video_width = load_video_frames(
             video_path=video_path,
             image_size=self.image_size,
-            offload_video_to_cpu=offload_video_to_cpu,
             async_loading_frames=async_loading_frames,
+            device=device,
         )
-        inference_state = {}
+        inference_state = dict()
         inference_state["images"] = images
         inference_state["num_frames"] = len(images)
-        # whether to offload the video frames to CPU memory
-        # turning on this option saves the GPU memory with only a very small overhead
-        inference_state["offload_video_to_cpu"] = offload_video_to_cpu
-        # whether to offload the inference state to CPU memory
-        # turning on this option saves the GPU memory at the cost of a lower tracking fps
-        # (e.g. in a test case of 768x768 model, fps dropped from 27 to 24 when tracking one object
-        # and from 24 to 21 when tracking two objects)
-        inference_state["offload_state_to_cpu"] = offload_state_to_cpu
         # the original video height and width, used for resizing final output scores
         inference_state["video_height"] = video_height
         inference_state["video_width"] = video_width
-        inference_state["device"] = torch.device("cpu")
-        if offload_state_to_cpu:
-            inference_state["storage_device"] = torch.device("cpu")
-        else:
-            inference_state["storage_device"] = torch.device("cuda")
+        inference_state["device"] = device
+        inference_state["storage_device"] = device
         # inputs on each frame
         inference_state["point_inputs_per_obj"] = {}
         inference_state["mask_inputs_per_obj"] = {}
@@ -214,7 +202,7 @@ class SAM2VideoPredictor(SAM2Base):
                 prev_out = obj_output_dict["non_cond_frame_outputs"].get(frame_idx)
 
         if prev_out is not None and prev_out["pred_masks"] is not None:
-            prev_sam_mask_logits = prev_out["pred_masks"].cuda(non_blocking=True)
+            prev_sam_mask_logits = prev_out["pred_masks"].to(inference_state["device"])
             # Clamp the scale of prev_sam_mask_logits to avoid rare numerical issues.
             prev_sam_mask_logits = torch.clamp(prev_sam_mask_logits, -32.0, 32.0)
         current_out, _ = self._run_single_frame_inference(
@@ -733,7 +721,12 @@ class SAM2VideoPredictor(SAM2Base):
         )
         if backbone_out is None:
             # Cache miss -- we will run inference on a single image
-            image = inference_state["images"][frame_idx].cpu().float().unsqueeze(0)
+            image = (
+                inference_state["images"][frame_idx]
+                .to(inference_state["device"])
+                .float()
+                .unsqueeze(0)
+            )
             backbone_out = self.forward_image(image)
             # Cache the most recent frame's feature (for repeated interactions with
             # a frame; we can use an LRU cache for more frames in the future).
