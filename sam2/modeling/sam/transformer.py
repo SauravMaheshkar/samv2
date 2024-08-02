@@ -15,10 +15,10 @@ from torch import Tensor, nn
 
 from sam2.modeling.position_encoding import apply_rotary_enc, compute_axial_cis
 from sam2.modeling.sam2_utils import MLP
-from sam2.utils.misc import get_sdpa_settings
+from sam2.utils.misc import get_sdp_backends
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
-OLD_GPU, USE_FLASH_ATTN, MATH_KERNEL_ON = get_sdpa_settings()
+# OLD_GPU, USE_FLASH_ATTN, MATH_KERNEL_ON = get_sdpa_settings()
 
 
 class TwoWayTransformer(nn.Module):
@@ -245,12 +245,8 @@ class Attention(nn.Module):
 
         dropout_p = self.dropout_p if self.training else 0.0
         # Attention
-        with torch.backends.cuda.sdp_kernel(
-            enable_flash=USE_FLASH_ATTN,
-            # if Flash attention kernel is off, then math kernel needs to be enabled
-            enable_math=(OLD_GPU and dropout_p > 0.0) or MATH_KERNEL_ON,
-            enable_mem_efficient=OLD_GPU,
-        ):
+
+        with torch.nn.attention.sdpa_kernel(get_sdp_backends(dropout_p)):
             out = F.scaled_dot_product_attention(q, k, v, dropout_p=dropout_p)
 
         out = self._recombine_heads(out)
@@ -311,13 +307,8 @@ class RoPEAttention(Attention):
         )
 
         dropout_p = self.dropout_p if self.training else 0.0
-        # Attention
-        with torch.backends.cuda.sdp_kernel(
-            enable_flash=USE_FLASH_ATTN,
-            # if Flash attention kernel is off, then math kernel needs to be enabled
-            enable_math=(OLD_GPU and dropout_p > 0.0) or MATH_KERNEL_ON,
-            enable_mem_efficient=OLD_GPU,
-        ):
+
+        with torch.nn.attention.sdpa_kernel(get_sdp_backends(dropout_p)):
             out = F.scaled_dot_product_attention(q, k, v, dropout_p=dropout_p)
 
         out = self._recombine_heads(out)
