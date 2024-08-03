@@ -1,11 +1,27 @@
+<a href="https://colab.research.google.com/github/SauravMaheshkar/samv2/blob/main/examples/notebooks/samv2_prompted_segmentation_with_wandb_tables.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
 [![Build and Tests](https://github.com/SauravMaheshkar/samv2/actions/workflows/ci.yml/badge.svg)](https://github.com/SauravMaheshkar/samv2/actions/workflows/ci.yml)
+
+CPU **compatible** fork of the official SAMv2 implementation.
+
+## Features 🚀
+
+* CPU compatible
+* ships with config files
+* Run image and video inference on CPUs
+* [Example notebooks](../examples/notebooks/) showcasing inference using weights and biases.
 
 ## Installation
 
-This is a CPU compatible fork of the official SAMv2 implementation. You can download it from [pypi](https://pypi.org/) using `pip` as follows:
+You can download it from [pypi](https://pypi.org/) using `pip` as follows:
 
 ```bash
 pip install samv2
+```
+
+or from the repository:
+
+```bash
+pip install git+https://github.com/SauravMaheshkar/samv2.git
 ```
 
 ## Usage
@@ -21,12 +37,6 @@ model = load_model(
     device="cpu"
 )
 ```
-
-## Features 🚀
-
-* CPU compatible
-* ships with config files
-* Run image and video inference on CPUs
 
 ## Citation
 
