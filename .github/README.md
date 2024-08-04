@@ -38,6 +38,9 @@ model = load_model(
 )
 ```
 
+* [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/SauravMaheshkar/samv2/blob/main/examples/notebooks/samv2_prompted_segmentation_with_wandb_tables.ipynb) Example Notebook to run prompted segmentation on images logging predictions as W&B Tables.
+* [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/SauravMaheshkar/samv2/blob/main/examples/notebooks/samv2_automatic_segmentation_with_wandb_tables.ipynb) Example Notebook to run automatic segmentation on images logging predictions as W&B Tables.
+
 ## Citation
 
 ```bibtex
